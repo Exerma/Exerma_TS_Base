@@ -1,0 +1,30 @@
+/**
+ * ---------------------------------------------------------------------------
+ *  (c) Patrick Seuret, 2023
+ * ---------------------------------------------------------------------------
+ *  exerma_progress.css
+ * ---------------------------------------------------------------------------
+ *
+ * Versions:
+ *   2024-07-20: First version
+ *****/
+
+    /* ---------- Unique mail objects ---------- */
+
+    #progressbar_container {
+        width: 80%;
+        margin: auto;
+    }
+
+    #progressbar_border {
+        width: 100%;
+        border: solid 1px #CCCCCC;
+        margin: 3px;
+        padding: 3px;
+    }
+
+    #progressbar {
+        width: 10%;
+        background-color: rgb(237, 154, 0);
+        margin: 2px;
+    }
