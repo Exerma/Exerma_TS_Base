@@ -1,20 +1,16 @@
 {
-  "name": "Exerma_Web-TS_Base",
-  "version": "0.1.0",
+  "name": "@exerma/exerma_web-ts_base",
+  "version": "1.0.0",
   "description": "Base framework for Web-based projects of Exerma",
   "main": "./src/root.js",
   "types": "./src/root.d.ts",
   "browser": "./src/browser.ts",
   "bin": {
-    "my-cli-tool": "./dist/esbuild/cli.js"
+    "my-cli-tool": "dist/esbuild/cli.js"
   },
   "scripts": {
-    "grunt:clean": "grunt clean",
-    "grunt:copy": "grunt copy",
-    "grunt:build": "grunt webpack",
-    "grunt:rebuild": "grunt clean copy webpack",
     "compile": "tsc",
-    "build": "webpack",
+    "publish": "npm publish",
     "lint": "eslint src/ --ignore-pattern /node_module/ --ext .ts --ext .cjs --ext .js ",
     "test": "jest",
     "clean": "rm -rf dist build package; ./_clean.zsh",
@@ -34,5 +30,13 @@
     "typedoc": "^0.25.2",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Exerma/Exerma_Web-TS_Base.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Exerma/Exerma_Web-TS_Base/issues"
+  },
+  "homepage": "https://github.com/Exerma/Exerma_Web-TS_Base#readme"
 }

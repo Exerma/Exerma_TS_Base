@@ -6,6 +6,8 @@
  * ---------------------------------------------------------------------------
  *
  * Versions:
+ *   2024-07-29: Add: makeStringUnique()
+ *   2023-11-12: Fix: Hours were badly returned in 
  *   2023-10-08: Add: stringifyArray() to add a safe stringification of arrays made of simple types
  *   2023-09-08: First version
  *
@@ -15,6 +17,7 @@
     import type * as ex              from './exerma_types'
     import log, { cInfoStarted, cRaiseUnexpected } from './exerma_log'
     import {
+        cNewLine,
             cNullString
             } from './exerma_consts'
 
@@ -119,11 +122,11 @@
         // Add date part
         if (options?.noDate !== true) {
 
-            result = numberToStringRightAlign(aDate.getFullYear(), 4)
-                + (options?.dateSep ?? defaultDateSep)
-                + numberToStringRightAlign(aDate.getMonth(), 2)
-                + (options?.dateSep ?? defaultDateSep)
-                + numberToStringRightAlign(aDate.getDate(), 2)
+            result = aDate.toLocaleString(window.navigator.language, { year: 'numeric' })
+                   + (options?.dateSep ?? defaultDateSep)
+                   + aDate.toLocaleString(window.navigator.language, { month: '2-digit' })
+                   + (options?.dateSep ?? defaultDateSep)
+                   + aDate.toLocaleString(window.navigator.language, { day: '2-digit' })
             
             sep = (options?.datetimeSep ?? defaultDateTimeSep)
 
@@ -134,12 +137,12 @@
 
             result = result
                 + sep
-                + numberToStringRightAlign(aDate.getHours(), 2)
+                + ('00' + aDate.getHours().toString()).slice(-2)
                 + (options?.timeSep ?? defaultTimeSep)
-                + numberToStringRightAlign(aDate.getMinutes(), 2)
+                + aDate.toLocaleString(window.navigator.language, { minute: '2-digit' })
                 + ( (options?.noSeconds === true)
                     ? ''
-                    : numberToStringRightAlign(aDate.getSeconds(), 2)
+                    : aDate.toLocaleString(window.navigator.language, { second: '2-digit' })
                     + ( (options?.addMilliseconds === true)
                         ? (options?.timeSep ?? defaultTimeSep)
                         + numberToStringRightAlign(aDate.getMilliseconds(), 3)
@@ -162,12 +165,15 @@
      *     ${dd}      = the day in format "00"
      *     ${ddd}     = the day of the week in format "Mon"
      *     ${dddd}    = the day of the week in format "Monday"
+     *     ${m}       = the month in format "0"
      *     ${mm}      = the month in format "00"
      *     ${mmm}     = the month in format "dec"
      *     ${mmmm}    = the month in format "December"
      *     ${mmmmm}   = the month in format "D" (first letter of month)
      *     ${yy}      = the year in format "00"
      *     ${yyyy}    = the year in format "0000"
+     *     ${H}       = the hours in format "0" (24h)
+     *     ${H12}     = the hours in format "0" (12h)
      *     ${HH}      = the hours in format "00" (24h)
      *     ${HH12}    = the hours in format "00" (12h)
      *     ${MM}      = the minutes in format "00"
@@ -201,21 +207,28 @@
         const datesep: string = (options?.datesep, '-')
         const timesep: string = (options?.timesep, ':')
 
-        result.set('d',     aDate.toLocaleString(window.navigator.language, { day: 'numeric' }))
-              .set('ddd',   aDate.toLocaleString(window.navigator.language, { day: '2-digit' }))
-              .set('ddd',   aDate.toLocaleString(window.navigator.language, { weekday: 'short' }))
-              .set('dddd',  aDate.toLocaleString(window.navigator.language, { weekday: 'long' }))
-              .set('mm',    aDate.toLocaleString(window.navigator.language, { month: '2-digit' }))
-              .set('mmm',   aDate.toLocaleString(window.navigator.language, { month: 'short' }))
-              .set('mmmm',  aDate.toLocaleString(window.navigator.language, { month: 'long' }))
-              .set('mmmmm', aDate.toLocaleString(window.navigator.language, { month: 'narrow' }))
-              .set('yy',    aDate.toLocaleString(window.navigator.language, { year: '2-digit' }))
-              .set('yyyy',  aDate.toLocaleString(window.navigator.language, { year: 'numeric' }))
-              .set('HH',    aDate.toLocaleString(window.navigator.language, { hour: '2-digit', hour12: false }))
-              .set('HH12',  aDate.toLocaleString(window.navigator.language, { hour: '2-digit', hour12: true }))
-              .set('MM',    aDate.toLocaleString(window.navigator.language, { minute: '2-digit' }))
-              .set('SS',    aDate.toLocaleString(window.navigator.language, { second: '2-digit' }))
-              .set('MSS',   numberToStringRightAlign(aDate.getMilliseconds(), 3))
+        result.set('short',  aDate.toLocaleString(window.navigator.language, { dateStyle: 'short' }))
+              .set('medium', aDate.toLocaleString(window.navigator.language, { dateStyle: 'medium' }))
+              .set('long',   aDate.toLocaleString(window.navigator.language, { dateStyle: 'long' }))
+              .set('full',   aDate.toLocaleString(window.navigator.language, { dateStyle: 'full' }))
+              .set('d',      aDate.toLocaleString(window.navigator.language, { day: 'numeric' }))
+              .set('dd',     aDate.toLocaleString(window.navigator.language, { day: '2-digit' }))
+              .set('ddd',    aDate.toLocaleString(window.navigator.language, { weekday: 'short' }))
+              .set('dddd',   aDate.toLocaleString(window.navigator.language, { weekday: 'long' }))
+              .set('m',      aDate.toLocaleString(window.navigator.language, { month: 'numeric' }))
+              .set('mm',     aDate.toLocaleString(window.navigator.language, { month: '2-digit' }))
+              .set('mmm',    aDate.toLocaleString(window.navigator.language, { month: 'short' }))
+              .set('mmmm',   aDate.toLocaleString(window.navigator.language, { month: 'long' }))
+              .set('mmmmm',  aDate.toLocaleString(window.navigator.language, { month: 'narrow' }))
+              .set('yy',     aDate.toLocaleString(window.navigator.language, { year: '2-digit' }))
+              .set('yyyy',   aDate.toLocaleString(window.navigator.language, { year: 'numeric' }))
+              .set('H',      aDate.getHours().toString())
+              .set('HH',     ('00' + aDate.getHours().toString()).slice(-2))
+              .set('H12',    aDate.toLocaleString(window.navigator.language, { hour: 'numeric', hour12: true }))
+              .set('HH12',   aDate.toLocaleString(window.navigator.language, { hour: '2-digit', hour12: true }))
+              .set('MM',     aDate.toLocaleString(window.navigator.language, { minute: '2-digit' }))
+              .set('SS',     aDate.toLocaleString(window.navigator.language, { second: '2-digit' }))
+              .set('MSS',    numberToStringRightAlign(aDate.getMilliseconds(), 3))
               .set('yyyy-mm-dd', (result.get('yyyy') ?? 'xxxx') + datesep
                                + (result.get('mm') ?? 'xx') + datesep
                                + (result.get('dd') ?? 'xx'))
@@ -365,5 +378,193 @@
             return false
 
         }
+
+    }
+
+
+    /**
+     * Add prefix (and optionnaly suffix) to every line of the provided text string.
+     * It can ignore empty lines or remove them if required
+     * @param {string} source is the string to add prefix / suffix to every line
+     * @param {string} prefix is the string to add as prefix to every line
+     * @param {object} options are the optional parameters
+     * @param {string} options.suffix is an optional suffix to add to the altered lines
+     * @param {string} options.replaceEmpty is used to replace empty lines with the provided
+     *                  string (this is done before testing ignoreEmpty and removeEmpty)
+     * @param {boolean} options.ignoreEmpty is used to ignore the empty lines (if set
+     *                  to true) or to add the prefix / suffix to empty lines too.
+     *                  Default is false to alter empty lines.
+     * @param {boolean} options.removeEmpty is used to remove the empty lines (if true,
+     *                  then ignore changeEmpty=true), or to keep them unchanged
+     *                  empty lines (if false, default)
+     * @param {string} options.separator is the separator to used between line (default
+     *                  is the cNewLine constant)
+     * @param {string} options.ifError is the value to return if an error occurs during
+     *                  the function (default = '')
+     * @returns {string} is the modified string
+     */
+    export function stringPrefixLinesWith (source: string,
+                                           prefix: string,
+                                           options?: {
+                                                suffix?: string
+                                                replaceEmpty?: string
+                                                ignoreEmpty?: boolean
+                                                removeEmpty?: boolean
+                                                separator?: string
+                                                ifError?: string
+                                           }): string {
+
+        const cSourceName = 'exerma_base/exerma_misc.ts/stringPrefixLinesWith'
+
+        log().trace(cSourceName, cInfoStarted)
+
+        try {
+        
+            const lines = source.split(cNewLine)
+            const result = lines.reduce((accumulator, line) => {
+
+                const sep = (accumulator === '' ? '' : (options?.separator ?? cNewLine))
+                const thisLine = (line === '' ? (options?.replaceEmpty ?? '') : line)
+                if ((thisLine !== '') || ((options?.ignoreEmpty ?? true) && (!(options?.removeEmpty ?? false)))) {
+                    return accumulator + sep + prefix + thisLine + (options?.suffix ?? '')
+                } else if (options?.removeEmpty !== true) {
+                    return accumulator + sep + thisLine
+                } else {
+                    return accumulator
+                }
+
+            }, '')
+
+            return result
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+            return options?.ifError ?? ''
+
+        }
+
+    }
+
+    /**
+     * Convert an integer number of bytes into a "10.4 Ko", "100.0 Mb" string
+     * source: https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
+     * @param {number} bytes is the size in byte to convert into a human reading size
+     * @param {number} decimals is the number of decimals to display (default=2)
+     * @param {object} params is used to set additional parameters
+     * @param {boolean} params.noUnits is used to not include the label in the output
+     *                  (if true) or to left align it (if false, default)
+     * @param {number} params.rightAlignSize is used to right align the result and 
+     *                  return a string with the required total length
+     * @returns {string} is the converted 
+     */
+    export function numberToByteSize (bytes: number,
+                                      decimals: number = 2,
+                                      params?: {
+                                        noUnits?: boolean
+                                        rightAlignSize?: number
+                                     }): string {
+
+        
+        if (bytes === 0) return '0 Bytes'
+
+        const k = 1024
+        const dm = decimals < 0 ? 0 : decimals
+        const sizes = ['oc', 'Ko', 'Mo', 'Go', 'To', 'Po', 'Eo', 'Zo', 'Yo']
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+        let result = `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+
+        if (params?.noUnits ?? false) {
+            result = result.slice(0, -2)
+        }
+        if (params?.rightAlignSize !== undefined) {
+            const len = Math.abs(params?.rightAlignSize) + 1
+            result = (String(' ').repeat(len) + result).slice(-len)
+        }
+
+        return result
+
+    }
+
+    /**
+     * # Make a string unique in a dictionary
+     * 
+     * Check if a string exists in a dictionary and, if yes, then create a new string by adding
+     * a number as suffix with an increasing counter until the result is unique in the dictionary.
+     * 
+     * In addition, the newly created string is automatically added to the dictionary to allow
+     * the system to be fed by the new values.
+     * 
+     * Versions: 29.07.2024
+     * @param {string} root is the root text to make unique (by adding "-000" style extension)
+     *                       if already in the "notInMap" dictionary
+     * @param {Map<string,string>} alterNotInMap is the map to search for the root text. If it
+     *                       contains the root text, then the function will create a new one
+     *                       by adding the separator and a number. The final, unique, name is
+     *                       automatically added to alterNotInMap (excepted if dontAutoAdd=true)
+     * @param {object} object is the list of optional paramters
+     * @param {string} object.separator is the separator to add to the name if it already exist
+     *                       in list (default = '-')
+     * @param {number} object.counterLen is the minimum number of digits to add after the separator
+     *                       when building the unique name (default = 3).
+     * @param {boolean} object.upCased is used to search the Map in an insensitive way by comparing all
+     *                       strings in upcase (default = false).
+     * @param {boolean} object.dontAutoAdd is used to not add automtically the new unique name (naked
+     *                       root or extended in "root-000" format)(if true) to alterNotInMap or to
+     *                       add it automatically (if false, default)
+     * @param {number} object.maxCount is the maximum number to loop until a unique string is found (if 
+     *                       this number is reached, the function will return an empty string)
+     * @returns {string} is the unique name (either the native root or the one make)
+     */
+    export function stringMakeUnique (root: string,
+                                      alterNotInMap: ex.MStringString,
+                                      {
+                                        separator = '-',
+                                        counterLen = 3,
+                                        upCased = false,
+                                        dontAutoAdd = false,
+                                        maxCount = 999
+                                        }: {
+                                        separator?: string
+                                        counterLen?: number
+                                        upCased?: boolean
+                                        dontAutoAdd?: boolean
+                                        maxCount?: number
+                                      }): string {
+
+        const cSourceName = 'exerma_base/exerma_misc.ts/makeStringUnique'
+
+        try {
+
+            // Check params
+            if (alterNotInMap === undefined) {
+                const alterNotInMap = new Map<string, string>()
+            }
+             const digits = Math.max(counterLen, 0)
+
+            // Build unique name
+            let count = 0
+            let checkname = root
+            while (   (alterNotInMap.has(upCased ? checkname.toUpperCase() : checkname))
+                   && (count < counterLen)) {
+
+                count = count + 1
+                const maxLen = Math.max(Math.ceil(Math.log10(count)), counterLen)
+                checkname = root + separator + ('0'.repeat(counterLen) + count).slice(-maxLen)
+
+            }
+            alterNotInMap.set(upCased ? checkname.toUpperCase() : checkname, checkname)
+
+            return checkname
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+
+        }
+
+        return cNullString
 
     }

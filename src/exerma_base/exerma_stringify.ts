@@ -5,14 +5,18 @@
  *  exerma_stringify.js
  * ---------------------------------------------------------------------------
  *
+ * Reference:
+ *   https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm
+ * 
  * Versions:
+ *   2023-12-03: Rem: Add hyperling reference to the "Structured_clone_algorithm" 
  *   2023-10-08: First version
  *
  */
 
     // --------------- Import
     import type * as ex from './exerma_types'
-    import log, { cInfoStarted, cRaiseInvalidParameter, cRaiseUnexpected } from './exerma_log'
+    import log, { cInfoStarted, cRaiseInvalidParameter, cRaiseUnexpected, cInfoToImplement } from './exerma_log'
     import {
             cTypeNameUnknown,
             cTypeNameUndefined,
@@ -37,7 +41,7 @@
                             control: string
                             value: string
                         }
-    interface SafeItemPair { key: string, value: string }
+    interface SafeItemPair { key: string, value: uSafeItem }
     interface SafeItemList extends SafeItem {
                             type: string
                             control: string
@@ -50,7 +54,7 @@
     const safeItemTemplate: SafeItem = { type: cNullString, control: cNullString }
     const safeItemValueTemplate: SafeItemValue = { type: cNullString, control: cNullString, value: cNullString }
     const safeItemListTemplate: SafeItemList = { type: cNullString, control: cNullString, count: 0, data: [] }
-    const safeItemPairTemplate: SafeItemPair = { key: cNullString, value: cNullString }
+    const safeItemPairTemplate: SafeItemPair = { key: cNullString, value: safeItemTemplate }
 
 
     // --------------- Stringify
@@ -74,12 +78,11 @@
      * @param {any[]} source is a array to convert into a string
      * @param {string} controlDescr is an optional string to provide to the 'control' field of
      *                  the returned stringified object
-     * @param {string} ifError is the value to return if an error occurs (default='')
-     * @returns {string} is the safely stringified result with the above structure
+     * @returns {uSafeItem} is the struture to use for a safe stringified result with the above
+     *                  structure (is undefined if error)
      */
-    export function safeStringifyArray ( source: any[],
-                                         controlDescr: string = cNullString,
-                                         ifError: string = cNullString ): string {
+    function safeStringifyArray ( source: any[],
+                                  controlDescr: string = cNullString ): uSafeItem {
 
         const cSourceName = 'exerma_base/exerma_stringify.ts/safeStringifyArray'
 
@@ -88,7 +91,7 @@
         try {
             
             const sourceData: SafeItemPair[] = []
-            source.forEach((value, index) => sourceData.push({ key: safeStringify(index), value: safeStringify(value) }))
+            source.forEach((value, index) => sourceData.push({ key: safeStringify(index), value: safeStringifyAny(value) }))
 
             const resultObj: SafeItemList = {
                                                 type: cTypeNameArray,
@@ -97,12 +100,12 @@
                                                 data: sourceData
                                             }
 
-            return JSON.stringify(resultObj)
+            return resultObj
 
         } catch (error) {
             
             log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
-            return ifError
+            return undefined
 
         }
 
@@ -127,12 +130,11 @@
      * @param {any[]} source is a array to convert into a string
      * @param {string} controlDescr is an optional string to provide to the 'control' field of
      *                  the returned stringified object
-     * @param {string} ifError is the value to return if an error occurs (default=cNullString)
-     * @returns {string} is the safely stringified result with the above structure
+     * @returns {uSafeItem} is the structure to use for a safe stringified result with the
+     *                  above structure
      */
-    export function safeStringifyMap ( source: Map<any, any>,
-                                       controlDescr: string = cNullString,
-                                       ifError: string = cNullString ): string {
+    function safeStringifyMap ( source: Map<any, any>,
+                                controlDescr: string = cNullString ): uSafeItem {
 
         const cSourceName = 'exerma_base/exerma_stringify.ts/safeStringifyMap'
 
@@ -141,7 +143,7 @@
         try {
             
             const sourceData: SafeItemPair[] = []
-            source.forEach((value, key) => sourceData.push({ key: safeStringify(key), value: safeStringify(value) }))
+            source.forEach((value, key) => sourceData.push({ key: safeStringify(key), value: safeStringifyAny(value) }))
 
             const resultObj: SafeItemList = {
                                                 type: cTypeNameMap,
@@ -150,12 +152,12 @@
                                                 data: sourceData
                                             }
 
-            return JSON.stringify(resultObj)
+            return resultObj
 
         } catch (error) {
             
             log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
-            return ifError
+            return undefined
 
         }
 
@@ -181,12 +183,11 @@
      * @param {object} source is a JSON-like object to convert into a string
      * @param {string} controlDescr is an optional string to provide to the 'control' field of
      *                  the returned stringified object
-     * @param {string} ifError is the value to return if an error occurs (default=cNullString)
-     * @returns {string} is the safely stringified result with the above structure
+     * @returns {uSafeItem} is the structure to use for a safe stringified result with the
+     *                  above structure
      */
-    export function safeStringifyObject ( source: object,
-                                          controlDescr: string = cNullString,
-                                          ifError: string = cNullString ): string {
+    function safeStringifyObject ( source: object,
+                                   controlDescr: string = cNullString ): uSafeItem {
 
         const cSourceName = 'exerma_base/exerma_stringify.ts/safeStringifyObject'
 
@@ -196,7 +197,7 @@
             
             const entries = Object.entries(source)
             const sourceData: SafeItemPair[] = []
-            entries.forEach(([key, item]) => sourceData.push({ key: safeStringify(key), value: safeStringify(item) }))
+            entries.forEach(([key, item]) => sourceData.push({ key: safeStringify(key), value: safeStringifyAny(item) }))
 
             const resultObj: SafeItemList = {
                                                 type: cTypeNameObject,
@@ -205,12 +206,83 @@
                                                 data: sourceData
                                             }
 
-            return JSON.stringify(resultObj)
+            return resultObj
 
         } catch (error) {
             
             log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
-            return ifError
+            return undefined
+
+        }
+
+    }
+
+    /**
+     * Convert the provided source data 
+     * @param {any} source is the variable, Array, Map or object to stringify safely
+     * @param {string} controlDescr is an optional string to provide to the 'control' field of
+     *                  the returned stringified object
+     * @returns {uSafeItem} is the structure to use for a safe stringified result with the
+     *                  above structure. 
+     *                  If an error occurs, then return undefined
+     */
+    function safeStringifyAny ( source: any,
+                                controlDescr: string = cNullString): uSafeItem {
+
+        const cSourceName = 'exerma_base/exerma_stringify.ts/safeStringifyAny'
+
+        log().trace(cSourceName, cInfoStarted)
+
+        try {
+
+            // Convert source:
+            // (1) Basic types
+            if (typeof source === cTypeNameBoolean ) {
+                const resultObj: SafeItemValue = { type: cTypeNameBoolean, control: controlDescr, value: source.toString() }
+                return resultObj
+            }
+
+            if (typeof source === cTypeNameString ) {
+                const resultObj: SafeItemValue = { type: cTypeNameString, control: controlDescr, value: source }
+                return resultObj
+            }
+            
+            if (typeof source === cTypeNameNumber ) {
+                const resultObj: SafeItemValue = { type: cTypeNameNumber, control: controlDescr, value: source.toString() }
+                return resultObj
+            }
+
+            if (typeof source === cTypeNameDate ) {
+                const resultObj: SafeItemValue = { type: cTypeNameDate, control: controlDescr, value: source.toISOString() }
+                return resultObj
+            }
+
+            if (typeof source === cTypeNameUndefined ) {
+                const resultObj: SafeItemValue = { type: cTypeNameUndefined, control: controlDescr, value: '' }
+                return resultObj
+            }
+
+            // (2) Complex types
+            if (typeof source === cTypeNameObject ) {
+                return safeStringifyObject(source)
+            }
+            
+            if (source instanceof Array) {
+                return safeStringifyArray(source, controlDescr)
+            }
+
+            if (source instanceof Map) {
+                 return safeStringifyMap(source)
+            }
+
+            // Invalid object type
+            log().raiseError(cSourceName, cRaiseInvalidParameter + ': ' + (typeof source))
+            return undefined
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+            return undefined
 
         }
 
@@ -240,53 +312,15 @@
 
         const cSourceName = 'exerma_base/exerma_stringify.ts/safeStringify'
 
-        log().trace(cSourceName, cInfoStarted)
-
         try {
-
-            // Convert source:
-            // (1) Basic types
-            if (typeof source === cTypeNameBoolean ) {
-                const resultObj: SafeItemValue = { type: cTypeNameBoolean, control: controlDescr, value: source.toString() }
-                return JSON.stringify(resultObj)
-            }
-
-            if (typeof source === cTypeNameString ) {
-                const resultObj: SafeItemValue = { type: cTypeNameString, control: controlDescr, value: source }
-                return JSON.stringify(resultObj)
+            
+            const resultObj = safeStringifyAny(source, controlDescr)
+            
+            if (resultObj === undefined) {
+                return ifError
             }
             
-            if (typeof source === cTypeNameNumber ) {
-                const resultObj: SafeItemValue = { type: cTypeNameNumber, control: controlDescr, value: source.toString() }
-                return JSON.stringify(resultObj)
-            }
-
-            if (typeof source === cTypeNameDate ) {
-                const resultObj: SafeItemValue = { type: cTypeNameDate, control: controlDescr, value: source.toISOString() }
-                return JSON.stringify(resultObj)
-            }
-
-            if (typeof source === cTypeNameUndefined ) {
-                const resultObj: SafeItemValue = { type: cTypeNameUndefined, control: controlDescr, value: '' }
-                return JSON.stringify(resultObj)
-            }
-
-            // (2) Complex type
-            if (typeof source === cTypeNameObject ) {
-                return safeStringifyObject(source)
-            }
-            
-            if (source instanceof Array) {
-                return safeStringifyArray(source, controlDescr)
-            }
-
-            if (source instanceof Map) {
-                 return safeStringifyMap(source)
-            }
-
-            // Invalid object type
-            log().raiseError(cSourceName, cRaiseInvalidParameter + ': ' + (typeof source))
-            return ifError
+            return JSON.stringify(resultObj)
 
         } catch (error) {
             
@@ -318,7 +352,7 @@
     export function safeUnstringifyAsAny (source: string,
                                           controlDescr: string = cNullString,
                                           options?: { ifError?: uSafeItem
-                                                      noError?: boolean  } ): uSafeItem {
+                                                      noError?: boolean  }): any {
 
         const cSourceName = 'exerma_base/exerma_stringify.ts/safeUnstringifyAsAny'
 
@@ -336,7 +370,9 @@
                 }
                 return (options?.ifError)
             }
-            return (JSON.parse(resultItem.value))
+
+
+            return (safeUnstringifyConvertSafeItem(resultItem, cNullString))
 
         } catch (error) {
             
@@ -363,7 +399,7 @@
     export function safeUnstringifyAsBoolean (source: string,
                                               controlDescr: string = cNullString,
                                               options?: { ifError?: boolean
-                                                          noError?: boolean } ): ex.uBoolean {
+                                                          noError?: boolean }): ex.uBoolean {
 
         const cSourceName = 'exerma_base/exerma_stringify.ts/safeUnstringifyAsBoolean'
 
@@ -381,7 +417,10 @@
 
             }
 
-            return (resultItem.value === 'true')
+            const result: ex.uBoolean = safeUnstringifyConvertSafeItem(resultItem,
+                                                                       cTypeNameBoolean,
+                                                                       { noError: options?.noError }) as ex.uBoolean
+            return (result ?? options?.ifError)
 
         } catch (error) {
             
@@ -391,6 +430,54 @@
         }
 
     }
+
+
+    /**
+     * Unstringifies the provided "source" string into a string
+     * @param {string} source is the safeStringify() string to convert back into a string
+     * @param {string} controlDescr is the safeguard to apply on the control member of the
+     *                  object (its "control" member must match). Ignored if empty (default)
+     * @param {object} options are the optional options of the function
+     * @param {string} options.ifError is the value to return if an error occurs (default = undefined)
+     * @param {boolean} options.noError is used to not raise an error if the conversion fails
+     *                  (if true) or to raise an error (if false, default). 
+     *                  Note: This flag doesn't remove unexpected errors: only conversion errors
+     * @returns {ex.uString} is the extracted value or ifError if an error occurs
+     */
+    export function safeUnstringifyAsString (source: string,
+                                             controlDescr: string = cNullString,
+                                             options?: { ifError: ex.uString
+                                                         noError?: boolean }): ex.uString {
+
+        const cSourceName = 'exerma_base/exerma_stringify.ts/safeUnstringifyAsString'
+
+        log().trace(cSourceName, cInfoStarted)
+
+        try {
+
+            const resultItem: uSafeItemValue =  safeUnstringifyAsSafeValue(source, controlDescr, cTypeNameString)
+            if (resultItem === undefined) {
+
+                if (!(options?.noError ?? false)) {
+                    log().raiseError(cSourceName, 'Cannot convert into a safe object or is not a string')
+                }
+                return (options?.ifError)
+            }
+
+            const result: ex.uString = safeUnstringifyConvertSafeItem(resultItem,
+                                                                      cTypeNameString,
+                                                                      { noError: options?.noError }) as ex.uString
+            return (result ?? options?.ifError)
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+            return (options?.ifError)
+
+        }
+
+    }
+
 
     /**
      * Unstringifies the provided "source" string into a number
@@ -425,8 +512,10 @@
                 return (options?.ifError)
             }
 
-            const result: number = Number.parseFloat(resultItem.value)
-            return ((isNaN(result)) ? (options?.ifError) : result)
+            const result: ex.uNumber = safeUnstringifyConvertSafeItem(resultItem,
+                                                                      cTypeNameNumber,
+                                                                      { noError: options?.noError }) as ex.uNumber
+            return (result ?? options?.ifError)
 
         } catch (error) {
             
@@ -438,48 +527,6 @@
     }
 
 
-    /**
-     * Unstringifies the provided "source" string into a string
-     * @param {string} source is the safeStringify() string to convert back into a string
-     * @param {string} controlDescr is the safeguard to apply on the control member of the
-     *                  object (its "control" member must match). Ignored if empty (default)
-     * @param {object} options are the optional options of the function
-     * @param {string} options.ifError is the value to return if an error occurs (default = undefined)
-     * @param {boolean} options.noError is used to not raise an error if the conversion fails
-     *                  (if true) or to raise an error (if false, default). 
-     *                  Note: This flag doesn't remove unexpected errors: only conversion errors
-     * @returns {ex.uString} is the extracted value or ifError if an error occurs
-     */
-    export function safeUnstringifyAsString (source: string,
-                                             controlDescr: string = cNullString,
-                                             options?: { ifError: ex.uString
-                                                          noError?: boolean } ): ex.uString {
-
-        const cSourceName = 'exerma_base/exerma_stringify.ts/safeUnstringifyAsString'
-
-        log().trace(cSourceName, cInfoStarted)
-
-        try {
-
-            const resultItem: uSafeItemValue =  safeUnstringifyAsSafeValue(source, controlDescr, cTypeNameString)
-            if (resultItem === undefined) {
-
-                if (!(options?.noError ?? false)) {
-                    log().raiseError(cSourceName, 'Cannot convert into a safe object or is not a string')
-                }
-                return (options?.ifError)
-            }
-
-            return (resultItem.value)
-
-        } catch (error) {
-            
-            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
-            return (options?.ifError)
-
-        }
-
-    }
 
     /**
      * Unstringifies the provided "source" string into a Date
@@ -496,7 +543,7 @@
     export function safeUnstringifyAsDate (source: string,
                                            controlDescr: string = cNullString,
                                            options?: { ifError: ex.uDate
-                                                       noError?: boolean } ): ex.uDate {
+                                                       noError?: boolean }): ex.uDate {
 
         const cSourceName = 'exerma_base/exerma_stringify.ts/safeUnstringifyAsDate'
 
@@ -516,9 +563,10 @@
                 
             }
 
-            // Convert UTC date/time string into local date/time (by removing the final 'Z' char)
-            // https://bobbyhadz.com/blog/javascript-convert-iso-string-to-date-object
-            return (new Date(resultItem.value.replace('Z', '')))
+            const result: ex.uDate = safeUnstringifyConvertSafeItem(resultItem,
+                                                                    cTypeNameDate,
+                                                                    { noError: options?.noError }) as ex.uDate
+            return (result ?? options?.ifError)
 
         } catch (error) {
             
@@ -528,6 +576,185 @@
         }
 
     }
+
+
+    /**
+     * Unstringifies the provided "source" string into an array of the provided type
+     * @param {string} source is the safeStringify() string to convert back into a Date
+     * @param {string} controlDescr is the safeguard to apply on the control member of the
+     *                  object (its "control" member must match). Ignored if empty (default)
+     * @param {object} options are the optional options of the function
+     * @param {string} options.ifError is the value to return if an error occurs (default = undefined)
+     * @param {boolean} options.noError is used to not raise an error if the conversion fails
+     *                  (if true) or to raise an error (if false, default). 
+     *                  Note: This flag doesn't remove unexpected errors: only conversion errors
+     * @returns {Array} is the extracted value or ifError if an error occurs
+     */
+    export function safeUnstringifyAsArray<T> (source: string,
+                                               controlDescr: string = cNullString,
+                                               options?: { ifError: T[] | undefined
+                                                           noError?: boolean } ): T[] | undefined {
+
+        const cSourceName = 'exerma_base/exerma_stringify.ts/safeUnstringifyAsArray'
+
+        log().trace(cSourceName, cInfoStarted)
+
+        try {
+
+            const resultItem: uSafeItemList =  safeUnstringifyAsSafeList(source,
+                                                                         controlDescr,
+                                                                         cTypeNameArray,
+                                                                         { noError: options?.noError } )
+            if (resultItem === undefined) {
+
+                if (!(options?.noError ?? false)) {
+                    log().raiseError(cSourceName, 'Cannot convert into a safe object or is not a date')
+                }
+                return (options?.ifError)
+                
+            }
+
+            // Convert every paid of the list
+            const result: T[] = []
+            resultItem.data.forEach((aPair: SafeItemPair) => {
+
+                // Convert the pair
+                // TODO: Convert items of the array
+                // const value: T = safeUnstringifyAsAny(aPair.value)
+                
+            })
+            log().debugInfo(cSourceName, cInfoToImplement)
+            return undefined
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+            return (options?.ifError)
+
+        }
+
+    }
+
+    /**
+     * Convert 
+     * @param {SafeItem} source is the SafeItem to convert back to the initial value
+     * @param {string} expectedType is the expected type of the data in source
+     * @param {object} options are the optional options of the function
+     * @param {any} options.ifError is the value to return if an error occurs
+     * @param {boolean} options.noError is used to not raise an error if the conversion
+     *                  fails (if true) or to raise an error (if false, default)
+     * @returns {any} is the converted value (or ifError if an error occurs)
+     */
+    function safeUnstringifyConvertSafeItem (source: SafeItem,
+                                             expectedType: string,
+                                             options?: { ifError?: any
+                                                         noError?: boolean }): unknown {
+
+
+        const cSourceName = 'exerma_base/exerma_stringify.ts/safeUnstringifyConvertSafeItem'
+
+        log().trace(cSourceName, cInfoStarted)
+
+        try {
+
+            if ((expectedType !== cNullString) && (expectedType !== source.type)) {
+
+                if (!(options?.noError ?? false)) {
+                    log().raiseError(cSourceName, 'Invalid type of data in SafeItem (' + source.type
+                                                + ') as ' + expectedType + ' was expected')
+                }
+                return (options?.ifError)
+
+            }
+
+
+            if (source.type === cTypeNameBoolean) {
+
+                const resultItem: uSafeItemValue =  safeUnstringifyAsSafeValue(source, cNullString, cTypeNameBoolean)
+                if (resultItem === undefined) {
+                
+                    if (!(options?.noError ?? false)) {
+                        log().raiseError(cSourceName, 'Cannot convert into a safe object or is not a boolean')
+                    }
+                    return (options?.ifError)
+
+                }
+                return (resultItem.value === 'true')
+
+            }
+
+
+            if (source.type === cTypeNameString) {
+
+                const resultItem: uSafeItemValue =  safeUnstringifyAsSafeValue(source, cNullString, cTypeNameString)
+                if (resultItem === undefined) {
+                
+                    if (!(options?.noError ?? false)) {
+                        log().raiseError(cSourceName, 'Cannot convert into a safe object or is not a string')
+                    }
+                    return (options?.ifError)
+
+                }
+                return (resultItem.value)
+
+            }
+
+
+            if (source.type === cTypeNameNumber) {
+
+                const resultItem: uSafeItemValue =  safeUnstringifyAsSafeValue(source, cNullString, cTypeNameNumber)
+                if (resultItem === undefined) {
+                
+                    if (!(options?.noError ?? false)) {
+                        log().raiseError(cSourceName, 'Cannot convert into a safe object or is not a number')
+                    }
+                    return (options?.ifError)
+
+                }
+                const result: number = Number.parseFloat(resultItem.value)
+                return ((isNaN(result)) ? (options?.ifError) : result)
+
+            }
+
+
+            if (source.type === cTypeNameDate) {
+
+                const resultItem: uSafeItemValue =  safeUnstringifyAsSafeValue(source, cNullString, cTypeNameDate)
+                if (resultItem === undefined) {
+                
+                    if (!(options?.noError ?? false)) {
+                        log().raiseError(cSourceName, 'Cannot convert into a safe object or is not a date')
+                    }
+                    return (options?.ifError)
+
+                }
+
+                // Convert UTC date/time string into local date/time (by removing the final 'Z' char)
+                // https://bobbyhadz.com/blog/javascript-convert-iso-string-to-date-object
+                return (new Date(resultItem.value.replace('Z', '')))
+                
+            }
+
+
+            if (source.type === cTypeNameUndefined) {
+
+                return undefined
+
+            }
+
+            // TODO: Convert Array<T>
+            // TODO: Convert Map<T>
+            // TODO: Convert object
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+            return (options?.ifError)
+
+        }
+
+    }
+
 
     /**
      * Unstringifies the provided "source" string into a SafeItem object and make basic
@@ -575,7 +802,7 @@
                 
                 default:
                     if (!(options?.noError ?? false)) {
-                        log().raiseError(cSourceName, cRaiseInvalidParameter + ': not a string of an object (' + (typeof source) + ')')
+                        log().raiseError(cSourceName, cRaiseInvalidParameter + ': neither a string nor an object (' + (typeof source) + ')')
                     }
                     return (options?.ifError)
             }

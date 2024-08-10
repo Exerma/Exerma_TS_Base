@@ -5,6 +5,8 @@
  * ---------------------------------------------------------------------------
  *
  * Versions:
+ *   2024-07-29: Add: getCheckboxStateById() to retrieve the check state of a checkbox
+ *   2024-06-09: Fix: createAndAddElement() now accept multiple occurrence of same attribute
  *   2023-08-20: Chg: Make this module an export class with static functions
  *   2023-07-23: First version
  * 
@@ -13,7 +15,7 @@
     // ---------- Imports
     import { addSyntheticLeadingComment } from '../../node_modules/typescript/lib/tsserverlibrary'
     import log, { cRaiseUnexpected } from './exerma_log'
-    import type { uHTMLElement, nHTMLElement } from './exerma_types'
+    import type { uHTMLElement, nHTMLElement, uBoolean } from './exerma_types'
     
     
     // Export object
@@ -97,7 +99,8 @@
      *             newcly created element with innerText
      * @param {{ name: string, value: string } | Map<string, string>} options.setAttribute 
      *             is used to add a single attribute or a list of attributes to the newly
-     *             created element
+     *             created element. Multiple occurrence of the same attribute will add 
+     *             successive values separated by space
      * @param {HTMLElement} options.target is an optional element to add the newly
      *             created as child of it. The position can be defined with the
      *             targetPosition parameter
@@ -113,8 +116,8 @@
      * @returns {uHTMLElement} is the newly created element or undefined if an error occurs
      */
     export function createAndAddElement (doc: Document,
-                                        tag: keyof HTMLElementTagNameMap,
-                                        options?: {
+                                         tag: keyof HTMLElementTagNameMap,
+                                         options?: {
                                             innerHtml?: string
                                             innerText?: string
                                             setAttribute?: Array<{ name: string, value: string }>
@@ -148,7 +151,14 @@
             if ((options?.setAttribute !== undefined) && (result !== null)) {
 
                 // Add each pair of the Map as {name,value} pairs
-                options.setAttribute.forEach((pair) => { result.setAttribute(pair.name, pair.value) })
+                options.setAttribute.forEach((pair) => {
+                    if (result.hasAttribute(pair.name)) {
+                        result.setAttribute(pair.name,
+                                            result.getAttribute(pair.name) + ' ' + pair.value)
+                    } else {
+                        result.setAttribute(pair.name, pair.value)
+                    }
+                })
                     
             }
 
@@ -190,5 +200,126 @@
             return undefined
 
         }
+
+    }
+
+    /**
+     * Look for an Html element by Id and assign a value to one of her attribute (if found)
+     * @param {Document} doc is the HTML DOM document to alter an element of
+     * @param {string} elementId is the Id of the element to alter the display property of
+     * @param {string} attribute is the name of the property to alter
+     * @param {string} value is the new value to assign to the required property
+     * @returns {Promise<boolean>} is true if success, false if an error occurs
+     */
+    export async function setElementByIdAttribute (doc: Document,
+                                                   elementId: string,
+                                                   attribute: string,
+                                                   value: string ): Promise<boolean> {
+
+        const cSourceName = 'exerma_base/exerma_dom/setElementByIdAttribute'
+
+        try {
+
+            const element = doc.getElementById(elementId)
+            if (element != null) {
+                element.setAttribute(attribute, value)
+                return true
+            }
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+
+        }
+        
+        return false
+
+    }
+
+    /**
+     * # Set content of a DOM element
+     * 
+     * Look for an Html element by Id and assign its text value (if found)
+     * 
+     * Versions: 29.07.2024
+     * @param {Document} doc is the HTML DOM document to alter an element of
+     * @param {string} elementId is the Id of the element to alter the content of
+     * @param {string} value is the new value to assign to the contant
+     * @param {boolean} isHtml is true if 'value' is an Html text, false if it is a
+     *                  simple text string
+     * @returns {Promise<boolean>} is true if success, false if an error occurs
+     */
+    export async function setElementByIdInnerContent (doc: Document,
+                                                      elementId: string,
+                                                      value: string,
+                                                      isHtml: boolean ): Promise<boolean> {
+
+        const cSourceName = 'exerma_base/exerma_dom/setElementByIdInnerContent'
+
+        try {
+            
+            const element = doc.getElementById(elementId)
+            if (element !== null) {
+                
+                if (isHtml) {
+                
+                    // Set the Html content of the element
+                    element.innerHTML = value
+                    return true
+                
+                } else {
+                
+                    // Set the Text content of the element
+                    element.innerText = value
+                    return true
+
+                }
+
+            }
+
+        } catch (error) {
+            
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+
+        }
+        
+        return false
+
+    }
+
+
+    /**
+     * Get the state (checked or not) of a checkbox input field
+     * @param {Document} doc is the HTML DOM document to alter an element of
+     * @param {string} checkboxId is the ID of the checkbox to get the state of
+     * @param {uBoolean} ifError is the value to return if the checkbox wasn't
+     *                  found or if it is not a checkbox input field (default = undefined)
+     * @returns {boolean} is true if the checkbox is checked, false if not, or 
+     *                  undefined if the checkbox wasn't found
+     */
+    export async function getCheckboxStateById (doc: Document,
+                                                checkboxId: string,
+                                                ifError: uBoolean = undefined): Promise<boolean | undefined> {
+
+        const cSourceName = 'exerma_base/exerma_dom/getCheckboxStateById'
+
+        try {
+            
+            const element = doc.getElementById(checkboxId)
+            if (   (element !== null)
+                && (element instanceof HTMLInputElement)
+                && (element.type === 'checkbox')) {
+                
+                return element.checked
+                
+            }
+
+        } catch (error) {
+
+            log().raiseError(cSourceName, cRaiseUnexpected, error as Error)
+
+        }
+
+        return ifError
 
     }
