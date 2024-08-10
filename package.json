@@ -1,5 +1,5 @@
 {
-  "name": "@exerma/exerma_web-ts_base",
+  "name": "@exerma/exerma_ts_base",
   "version": "0.1.0",
   "description": "Base framework for Web-based projects of Exerma",
   "main": "lib/index.js",
@@ -20,7 +20,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Exerma/Exerma_Web-TS_Base.git"
+    "url": "git+https://github.com/Exerma/Exerma_TS_Base.git"
   },
   "bugs": {
     "url": "https://github.com/Exerma/Exerma_Web-TS_Base/issues"
