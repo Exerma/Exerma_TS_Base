@@ -10,11 +10,11 @@
  */
 
     // --------------- Imports
-    import { cNewLine } from './exerma_consts'
     // import { datetimeToStringTag } from './exerma_misc'  --> Use a locally optimised version of it
 
 
     // --------------- Types
+    type LanguageCode = string
 
 
     // --------------- Constants
@@ -28,14 +28,14 @@
         /**
          * Language managed by this object
          */
-        private readonly _language: browser.i18n.LanguageCode
+        private readonly _language: LanguageCode
 
         // ---------- Big four
         /**
          * Initialize the object managing a specific language
          * @param {string} language is the language managed by this instence
          */
-        constructor (language: messenger.i18n.LanguageCode) {
+        constructor (language: LanguageCode) {
 
             this._language = language
 
@@ -50,20 +50,21 @@
          *              provided value(s)
          * @param {string} options.ifNotFound is the value to return if the native getMessage() returns '' or
          *              is undefined
+         * @param {boolean} feminine is used to inform the system that the subject is feminine (and not neutral)
+         * @param {boolean} masculin is used to inform the system that the subject is masculin (and not neutral)
+         * @param {number} count is the number of object(s) if there is a difference between one, two or many objects
          * @returns {string} is the localized string corresponding to the provided message name
          */
-        public getMessage (message: string,
-                           options: {
-                                substitution?: string | string[]
-                                ifNotFound?: string
-                            }): string {
+        public async getMessage (message: string,
+                                 options: {
+                                    substitution?: string | string[]
+                                    ifNotFound?: string
+                                    feminine?: boolean
+                                    masculin?: boolean
+                                    count?: number
+                                }): Promise<string> {
 
-            const result = messenger.i18n.getMessage(message, options?.substitution ?? '')
-            if ((result === undefined) || (result === '')) {
-                return options?.ifNotFound ?? ''
-            } else {
-                return result
-            }
+            return message
 
         }
 
@@ -78,28 +79,7 @@
      * @param {string} language is the name of the log to retrieve
      * @returns {CLanguage} is the main CLanguage object (built on demand)
      */
-    export function lang (language: string = ''): CLanguage {
-
-        if (mainCLanguage === undefined) {
-
-            // Create map of CLanguage on demand
-            mainCLanguage = new Map<string, CLanguage>()
-
-        }
-
-        if (language === '') {
-            language = messenger.i18n.getUILanguage()
-        }
-        if (!mainCLanguage.has(language)) {
-
-            // Create CLanguage on demand
-            mainCLanguage.set(language, new CLanguage(language))
-
-        }
-
-        return mainCLanguage.get(language) as CLanguage
-
-    }
+    type lang = (language: string) => CLanguage
 
     /**
      * Dummy function to retrieve messages to translate in future
