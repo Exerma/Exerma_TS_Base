@@ -1,11 +1,12 @@
 /**
  * ---------------------------------------------------------------------------
- *  (c) Patrick Seuret, 2023-2024
+ *  (c) Patrick Seuret, 2023
  * ---------------------------------------------------------------------------
  *  exerma_misc.js
  * ---------------------------------------------------------------------------
  *
  * Versions:
+ *   2024-09-29: Chg: Add time format in datetimeToFieldReplacement() and rename date formats
  *   2024-07-29: Add: makeStringUnique()
  *   2023-11-12: Fix: Hours were badly returned in 
  *   2023-10-08: Add: stringifyArray() to add a safe stringification of arrays made of simple types
@@ -14,12 +15,12 @@
  */
 
     // --------------- Import
-    import type * as ex                         from './exerma_types'
+    import type * as ex              from './exerma_types'
     import log, { cInfoStarted, cRaiseUnexpected } from './exerma_log'
     import {
-                cNewLine,
-                cNullString
-            }                                   from './exerma_consts'
+        cNewLine,
+            cNullString
+            } from './exerma_consts'
 
     // --------------- Numbers
 
@@ -207,28 +208,32 @@
         const datesep: string = (options?.datesep, '-')
         const timesep: string = (options?.timesep, ':')
 
-        result.set('short',  aDate.toLocaleString(window.navigator.language, { dateStyle: 'short' }))
-              .set('medium', aDate.toLocaleString(window.navigator.language, { dateStyle: 'medium' }))
-              .set('long',   aDate.toLocaleString(window.navigator.language, { dateStyle: 'long' }))
-              .set('full',   aDate.toLocaleString(window.navigator.language, { dateStyle: 'full' }))
-              .set('d',      aDate.toLocaleString(window.navigator.language, { day: 'numeric' }))
-              .set('dd',     aDate.toLocaleString(window.navigator.language, { day: '2-digit' }))
-              .set('ddd',    aDate.toLocaleString(window.navigator.language, { weekday: 'short' }))
-              .set('dddd',   aDate.toLocaleString(window.navigator.language, { weekday: 'long' }))
-              .set('m',      aDate.toLocaleString(window.navigator.language, { month: 'numeric' }))
-              .set('mm',     aDate.toLocaleString(window.navigator.language, { month: '2-digit' }))
-              .set('mmm',    aDate.toLocaleString(window.navigator.language, { month: 'short' }))
-              .set('mmmm',   aDate.toLocaleString(window.navigator.language, { month: 'long' }))
-              .set('mmmmm',  aDate.toLocaleString(window.navigator.language, { month: 'narrow' }))
-              .set('yy',     aDate.toLocaleString(window.navigator.language, { year: '2-digit' }))
-              .set('yyyy',   aDate.toLocaleString(window.navigator.language, { year: 'numeric' }))
-              .set('H',      aDate.getHours().toString())
-              .set('HH',     ('00' + aDate.getHours().toString()).slice(-2))
-              .set('H12',    aDate.toLocaleString(window.navigator.language, { hour: 'numeric', hour12: true }))
-              .set('HH12',   aDate.toLocaleString(window.navigator.language, { hour: '2-digit', hour12: true }))
-              .set('MM',     aDate.toLocaleString(window.navigator.language, { minute: '2-digit' }))
-              .set('SS',     aDate.toLocaleString(window.navigator.language, { second: '2-digit' }))
-              .set('MSS',    numberToStringRightAlign(aDate.getMilliseconds(), 3))
+        result.set('shortdate',  aDate.toLocaleString(window.navigator.language, { dateStyle: 'short' }))
+              .set('mediumdate', aDate.toLocaleString(window.navigator.language, { dateStyle: 'medium' }))
+              .set('longdate',   aDate.toLocaleString(window.navigator.language, { dateStyle: 'long' }))
+              .set('fulldate',   aDate.toLocaleString(window.navigator.language, { dateStyle: 'full' }))
+              .set('d',          aDate.toLocaleString(window.navigator.language, { day: 'numeric' }))
+              .set('dd',         aDate.toLocaleString(window.navigator.language, { day: '2-digit' }))
+              .set('ddd',        aDate.toLocaleString(window.navigator.language, { weekday: 'short' }))
+              .set('dddd',       aDate.toLocaleString(window.navigator.language, { weekday: 'long' }))
+              .set('m',          aDate.toLocaleString(window.navigator.language, { month: 'numeric' }))
+              .set('mm',         aDate.toLocaleString(window.navigator.language, { month: '2-digit' }))
+              .set('mmm',        aDate.toLocaleString(window.navigator.language, { month: 'short' }))
+              .set('mmmm',       aDate.toLocaleString(window.navigator.language, { month: 'long' }))
+              .set('mmmmm',      aDate.toLocaleString(window.navigator.language, { month: 'narrow' }))
+              .set('yy',         aDate.toLocaleString(window.navigator.language, { year: '2-digit' }))
+              .set('yyyy',       aDate.toLocaleString(window.navigator.language, { year: 'numeric' }))
+              .set('shorttime',  aDate.toLocaleString(window.navigator.language, { timeStyle: 'short' }))
+              .set('mediumtime', aDate.toLocaleString(window.navigator.language, { timeStyle: 'medium' }))
+              .set('longtime',   aDate.toLocaleString(window.navigator.language, { timeStyle: 'long' }))
+              .set('fulltime',   aDate.toLocaleString(window.navigator.language, { timeStyle: 'full' }))
+              .set('H',          aDate.getHours().toString())
+              .set('HH',         ('00' + aDate.getHours().toString()).slice(-2))
+              .set('H12',        aDate.toLocaleString(window.navigator.language, { hour: 'numeric', hour12: true }))
+              .set('HH12',       aDate.toLocaleString(window.navigator.language, { hour: '2-digit', hour12: true }))
+              .set('MM',         aDate.toLocaleString(window.navigator.language, { minute: '2-digit' }))
+              .set('SS',         aDate.toLocaleString(window.navigator.language, { second: '2-digit' }))
+              .set('MSS',        numberToStringRightAlign(aDate.getMilliseconds(), 3))
               .set('yyyy-mm-dd', (result.get('yyyy') ?? 'xxxx') + datesep
                                + (result.get('mm') ?? 'xx') + datesep
                                + (result.get('dd') ?? 'xx'))
@@ -256,9 +261,6 @@
      * It is suprisingly complicated to retrieve a property by name from an object with
      * an undefined type. This function allows to parse all values of the object to find
      * the required key.
-     * 
-     * 
-     * 
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
      * https://stackoverflow.com/questions/41993515/access-object-key-using-variable-in-typescript
      * @param {object | undefined} obj is the undefined object we want to retrieve the "key" value of
