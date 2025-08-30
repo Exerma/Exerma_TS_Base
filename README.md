@@ -1,10 +1,14 @@
 # Exerma typescript base framework
 
-This is an example file with default selections.
+Project: Exerma_TS_Base
 
 ## Author
 
 This framework is developped by [Patrick Seuret](https://seuret.ch) of [Exerma](https://exerma.com)
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
 
 ## Install
 
@@ -20,10 +24,6 @@ npm install exerma_ts_base
 ## Contributing
 
 No contribution is currently required.
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
 
 ## References
 
