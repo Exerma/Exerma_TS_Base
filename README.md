@@ -12,8 +12,22 @@ This framework is developped by [Patrick Seuret](https://seuret.ch) of [Exerma](
 
 ## Install
 
+Standard install:
+
 ```npm
-npm install exerma_ts_base
+npm install @exerma/exerma_ts_base --save
+```
+
+Local install:
+
+```npm
+npm install ~/Data/Sources/TypeScript/Exerma_TS_Base/Exerma_TS_Base
+````
+
+or
+
+```npm
+npm link ~/Data/Sources/TypeScript/Exerma_TS_Base/Exerma_TS_Base --save
 ```
 
 ## Usage

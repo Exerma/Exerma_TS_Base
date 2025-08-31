@@ -15,12 +15,12 @@
  */
 
     // --------------- Import
-    import type * as ex              from './exerma_types'
+    import type * as ex                            from './exerma_types'
     import log, { cInfoStarted, cRaiseUnexpected } from './exerma_log'
     import {
-        cNewLine,
+            cNewLine,
             cNullString
-            } from './exerma_consts'
+           }                                       from './exerma_consts'
 
     // --------------- Numbers
 
