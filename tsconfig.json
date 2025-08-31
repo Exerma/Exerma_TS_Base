@@ -1,6 +1,7 @@
 {
   "include": [
                 "./src/**/*.ts",
+                "dependancies/**/*.ts",
                 "node_modules/**/*.d.ts"
             ],
   "exclude": [
